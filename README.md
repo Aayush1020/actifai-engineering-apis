@@ -41,3 +41,108 @@ your browser. You should see a "Hello World" message.
 ## Help
 
 If you have any questions, feel free to reach out to your interview scheduler for clarification!
+
+---
+
+## Implementation
+
+### Overview
+
+This implementation provides three analytics endpoints for sales data analysis:
+1. **Time-Series Endpoint**: Returns aggregated sales data per time bucket with an ability to filter on various different options
+2. **Summary Endpoint**: Returns high-level summary statistics (great for a high level dashboard)
+3. **Top Performers Endpoint**: Returns ranked list of top-performing users or groups
+
+### Endpoints (Deep dive)
+
+#### 1. Time-Series Endpoint
+
+**GET** `/analytics/sales/time-series`
+
+Returns aggregated sales data per time bucket with flexible filtering and metric selection.
+
+**Required Parameters:**
+- `granularity`: `"daily"`, `"weekly"` or `"monthly"`
+- `start`: Start date (ISO format (common default format): `YYYY-MM-DD`)
+- `end`: End date (ISO format)
+
+**Optional Parameters:**
+- `users`: user IDs (ie: `"1,2,3"`)
+- `groups`: group IDs (ie: `"1,2"`)
+- `metrics`: the metric(s) to show (e.g: `"total"`, `"avg"` or `"count"` (default: all))
+- `aggregate_by`: `"user"` (default) or `"group"`
+
+**Response:**
+Returns a JSON array where each object represents aggregated sales data for a time period. Each object contains:
+- A JSON list where each object is aggregated sales data for the granularity time period selected
+- Each object will contain the user_id or group_id depending on what you chose to aggregate by in the query
+- Each object will contain the "metric" requested in the query as well
+
+**Example:**
+```
+http://localhost:3000/analytics/sales/time-series?granularity=daily&start=2021-01-01&end=2021-01-31&users=12,15
+```
+
+#### 2. Summary Endpoint
+
+**GET** `/analytics/sales/summary`
+
+Returns high-level summary statistics for a date range with a few optional filters.
+
+**Required Parameters:**
+- `start`: Start date (ISO format)
+- `end`: End date (ISO format)
+
+**Optional Parameters:**
+- `users`: user IDs (ie: `"1,2,3"`)
+- `groups`: group IDs (ie: `"1,2"`)
+
+**Response:**
+- Total revenue, average revenue, total sales
+- Active users and groups counts
+- Revenue breakdown by group
+
+**Example:**
+```
+http://localhost:3000/analytics/sales/summary?start=2021-01-01&end=2021-12-31
+```
+
+#### 3. Top Performers Endpoint
+
+**GET** `/analytics/sales/top-performers`
+
+Returns a ranked list of top-performing users or groups.
+
+**Required Parameters:**
+- `type`: `"user"` or `"group"`
+- `metric`: `"total"`, `"avg"` or `"count"`
+- `start`: Start date (ISO format)
+- `end`: End date (ISO format)
+
+**Optional Parameters:**
+- `limit`: Cut-off for number of high performers to return
+- `users`: user IDs (ie: `"1,2,3"`)
+- `groups`: group IDs (ie: `"1,2"`)
+
+**Example:**
+```
+http://localhost:3000/analytics/sales/top-performers?type=user&metric=total&start=2021-01-01&end=2021-12-31&limit=10
+```
+
+---
+
+## Future Improvements / Out of Scope
+
+This implementation focused on delivering working endpoints that met the core requirements. 
+
+In a production environment, there are a variety of extra things that I would consider that for this project, I felt were "out-of-scope". I have listed some of them below.
+
+**Integration Tests**: Integration tests would allow us to deliver end to end testing on the endpoint while utilizing real data at each stage (ie. alpha data, production data, etc). 
+
+**Throttling**: For an application like this, we would need to be careful from a load perspective. Running a canary in the background to load test and then setting up throttling rules for all of our consumes (even if it is was just the frontend dashboard tool) would be key.
+
+**Logging**: Depending on where this was hosted, we'd want to set up logging that accurately depicts the step by step process of hitting each endpoint. This would be incredibly useful when debugging and working through issues.
+
+**Authentication**: We would want to use some sort of authentication/authorization set up to make sure we only allow known requesters to call this API. Assuming the data is private information, we would need strict authentication on all callers.
+
+**Metrics**: We'd want metrics to pool as calls are made and results are returned for each of these endpoints. These would be valuable if we were to scale usage and to determine common error patterns by consumers.

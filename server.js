@@ -20,6 +20,13 @@ async function start() {
   });
 
   // Write your endpoints here
+  const timeSeriesRouter = require('./routes/analytics/timeSeries');
+  const summaryRouter = require('./routes/analytics/summary');
+  const topPerformersRouter = require('./routes/analytics/topPerformers');
+  
+  app.use('/analytics', timeSeriesRouter);
+  app.use('/analytics', summaryRouter);
+  app.use('/analytics', topPerformersRouter);
 
   app.listen(PORT, HOST);
   console.log(`Server is running on http://${HOST}:${PORT}`);
